@@ -54,6 +54,8 @@ android {
 }
 
 dependencies {
+
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
     // Supabase - ИСПРАВЛЕНО: gotrue-kt вместо auth-kt
     val supabaseVersion = "2.6.1"
     implementation(platform("io.github.jan-tennert.supabase:bom:$supabaseVersion"))
