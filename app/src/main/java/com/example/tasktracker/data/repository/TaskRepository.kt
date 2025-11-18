@@ -5,6 +5,7 @@ import com.example.tasktracker.data.model.Task
 import com.example.tasktracker.data.model.TaskInsert
 import com.example.tasktracker.data.model.TaskPriority
 import com.example.tasktracker.data.model.TaskUpdate
+import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -21,8 +22,8 @@ class TaskRepository {
                     filter {
                         eq("user_id", userId)
                     }
-                    order("priority", ascending = false) // Сложные сначала
-                    order("created_at", ascending = true)
+                    order(column = "priority", order = Order.DESCENDING)
+                    order(column = "created_at", order = Order.ASCENDING)
                 }
                 .decodeList<Task>()
             emit(tasks)
