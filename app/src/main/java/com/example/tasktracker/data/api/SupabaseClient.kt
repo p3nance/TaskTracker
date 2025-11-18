@@ -17,6 +17,7 @@ object SupabaseClient {
             // ВАЖНО: Автоматическое сохранение и восстановление сессии
             alwaysAutoRefresh = true
             autoLoadFromStorage = true
+            // Сессия будет сохранена в SharedPreferences
         }
         install(Postgrest)
     }

@@ -122,16 +122,20 @@ fun SettingsDialog(
                     Text("Следовать системной теме")
                     Switch(
                         checked = useSystemTheme,
-                        onCheckedChange = {
-                            if (it) {
+                        onCheckedChange = { isEnabled ->
+                            if (isEnabled) {
                                 themeViewModel.enableSystemTheme()
+                            } else {
+                                // Если выключить системную тему, используем текущее значение darkMode
+                                themeViewModel.setDarkMode(darkMode)
                             }
                         }
                     )
                 }
 
+                // Только показываем выбор темы если отключена системная тема
                 if (!useSystemTheme) {
-                    Divider()
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
 
                     // Светлая тема
                     Row(

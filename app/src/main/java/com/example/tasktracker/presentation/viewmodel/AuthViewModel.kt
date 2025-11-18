@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tasktracker.data.model.AuthState
 import com.example.tasktracker.data.repository.AuthRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -34,6 +35,9 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
+                // Даем время на восстановление сессии из хранилища
+                delay(500)
+
                 val user = repository.getCurrentUser()
                 _authState.value = if (user != null) {
                     AuthState.Authenticated
@@ -42,6 +46,7 @@ class AuthViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _authState.value = AuthState.Unauthenticated
+                e.printStackTrace()
             }
         }
     }
@@ -67,7 +72,6 @@ class AuthViewModel : ViewModel() {
                 _errorMessage.value = null
 
                 val result = repository.signUp(email, password)
-
                 result.onSuccess {
                     _authState.value = AuthState.Authenticated
                     _errorMessage.value = null
@@ -78,6 +82,7 @@ class AuthViewModel : ViewModel() {
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Неизвестная ошибка"
                 _authState.value = AuthState.Unauthenticated
+                e.printStackTrace()
             } finally {
                 _loading.value = false
             }
@@ -100,8 +105,9 @@ class AuthViewModel : ViewModel() {
                 _errorMessage.value = null
 
                 val result = repository.signIn(email, password)
-
                 result.onSuccess {
+                    // Даем время на сохранение сессии
+                    delay(300)
                     _authState.value = AuthState.Authenticated
                     _errorMessage.value = null
                 }.onFailure { error ->
@@ -111,6 +117,7 @@ class AuthViewModel : ViewModel() {
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Неизвестная ошибка"
                 _authState.value = AuthState.Unauthenticated
+                e.printStackTrace()
             } finally {
                 _loading.value = false
             }
@@ -128,6 +135,7 @@ class AuthViewModel : ViewModel() {
                 _authState.value = AuthState.Unauthenticated
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Ошибка выхода"
+                e.printStackTrace()
             } finally {
                 _loading.value = false
             }
