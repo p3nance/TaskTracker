@@ -20,6 +20,12 @@ data class Task(
     @SerialName("is_completed")
     val isCompleted: Boolean = false,
 
+    @SerialName("priority")
+    val priority: TaskPriority = TaskPriority.MEDIUM,
+
+    @SerialName("due_date")
+    val dueDate: String? = null, // ISO 8601 формат: "2025-11-20"
+
     @SerialName("created_at")
     val createdAt: String = "",
 
@@ -28,10 +34,19 @@ data class Task(
 )
 
 @Serializable
-data class User(
-    @SerialName("id")
-    val id: String,
+enum class TaskPriority {
+    @SerialName("low")
+    LOW,
 
-    @SerialName("email")
-    val email: String
-)
+    @SerialName("medium")
+    MEDIUM,
+
+    @SerialName("high")
+    HIGH;
+
+    fun getDisplayName(): String = when (this) {
+        LOW -> "Легкая"
+        MEDIUM -> "Средняя"
+        HIGH -> "Сложная"
+    }
+}

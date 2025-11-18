@@ -2,6 +2,9 @@ package com.example.tasktracker.data.repository
 
 import com.example.tasktracker.data.api.SupabaseClient
 import com.example.tasktracker.data.model.Task
+import com.example.tasktracker.data.model.TaskInsert
+import com.example.tasktracker.data.model.TaskPriority
+import com.example.tasktracker.data.model.TaskUpdate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -10,8 +13,6 @@ class TaskRepository {
 
     /**
      * Получение списка задач пользователя
-     * @param userId идентификатор пользователя
-     * @return Flow со списком задач
      */
     fun getTasks(userId: String): Flow<List<Task>> = flow {
         try {
@@ -20,6 +21,8 @@ class TaskRepository {
                     filter {
                         eq("user_id", userId)
                     }
+                    order("priority", ascending = false) // Сложные сначала
+                    order("created_at", ascending = true)
                 }
                 .decodeList<Task>()
             emit(tasks)
@@ -31,31 +34,22 @@ class TaskRepository {
 
     /**
      * Создание новой задачи
-     * @param userId идентификатор пользователя
-     * @param title название задачи
-     * @param description описание задачи
-     * @return успешность операции
      */
     suspend fun createTask(
         userId: String,
         title: String,
-        description: String = ""
+        description: String = "",
+        priority: TaskPriority = TaskPriority.MEDIUM,
+        dueDate: String? = null
     ): Boolean {
         return try {
-            // Создаем объект Task с данными (без id, created_at, updated_at - их сгенерирует Supabase)
-            @kotlinx.serialization.Serializable
-            data class TaskInsert(
-                val user_id: String,
-                val title: String,
-                val description: String,
-                val is_completed: Boolean = false
-            )
-
             val newTask = TaskInsert(
-                user_id = userId,
+                userId = userId,
                 title = title,
                 description = description,
-                is_completed = false
+                priority = priority,
+                dueDate = dueDate,
+                isCompleted = false
             )
 
             postgrest.from("tasks").insert(newTask)
@@ -68,26 +62,22 @@ class TaskRepository {
 
     /**
      * Обновление задачи
-     * @param taskId идентификатор задачи
-     * @param title новое название
-     * @param isCompleted новый статус выполнения
-     * @return успешность операции
      */
     suspend fun updateTask(
         taskId: String,
-        title: String,
-        isCompleted: Boolean
+        title: String? = null,
+        description: String? = null,
+        isCompleted: Boolean? = null,
+        priority: TaskPriority? = null,
+        dueDate: String? = null
     ): Boolean {
         return try {
-            @kotlinx.serialization.Serializable
-            data class TaskUpdate(
-                val title: String,
-                val is_completed: Boolean
-            )
-
             val update = TaskUpdate(
                 title = title,
-                is_completed = isCompleted
+                description = description,
+                isCompleted = isCompleted,
+                priority = priority,
+                dueDate = dueDate
             )
 
             postgrest.from("tasks")
@@ -105,8 +95,6 @@ class TaskRepository {
 
     /**
      * Удаление задачи
-     * @param taskId идентификатор задачи
-     * @return успешность операции
      */
     suspend fun deleteTask(taskId: String): Boolean {
         return try {
@@ -116,6 +104,26 @@ class TaskRepository {
                         eq("id", taskId)
                     }
                 }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    /**
+     * Удаление нескольких задач
+     */
+    suspend fun deleteTasks(taskIds: List<String>): Boolean {
+        return try {
+            taskIds.forEach { taskId ->
+                postgrest.from("tasks")
+                    .delete {
+                        filter {
+                            eq("id", taskId)
+                        }
+                    }
+            }
             true
         } catch (e: Exception) {
             e.printStackTrace()
